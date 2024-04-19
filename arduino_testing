@@ -1,0 +1,88 @@
+#define BAUD_RATE 9600 // Adjust baud rate if needed
+#define dirPin_fr 33
+#define pwmPin_fr 32
+
+#define dirPin_rr 26
+#define pwmPin_rr 27
+
+#define dirPin_fl 39
+#define pwmPin_fl 38
+
+#define dirPin_rl 45
+#define pwmPin_rl 44
+
+int SpeedVal = 0;
+
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(BAUD_RATE);
+  
+  // Print a message to the serial monitor
+  Serial.println("Start receiving messages...");
+  pinMode(dirPin_fr, OUTPUT);
+  pinMode(dirPin_fl, OUTPUT);
+  pinMode(dirPin_rr, OUTPUT);
+  pinMode(dirPin_rl, OUTPUT);
+  pinMode(pwmPin_fr, OUTPUT);
+  pinMode(pwmPin_fl, OUTPUT);
+  pinMode(pwmPin_rr, OUTPUT);
+  pinMode(pwmPin_rl, OUTPUT);
+}
+
+void loop() {
+  // Check if data is available from the serial port
+  if (Serial.available() > 0) {
+    
+    // Declare variables to store received bytes
+    byte command;
+    byte payload_length;
+    byte motor_id;
+    byte direction;
+    uint16_t duty_cycle = 0;
+    
+    // Read each byte of the message
+    command = Serial.read();
+    payload_length = Serial.read();
+    motor_id = Serial.read();
+    direction = Serial.read();
+    duty_cycle = (Serial.read() << 8) | Serial.read();  // Combine high and low bytes for duty cycle
+    
+    // Print the received message details
+    Serial.print("Received message: ");
+    Serial.print("Command: 0x");
+    Serial.print(command, HEX);
+    Serial.print(", Payload Length: ");
+    Serial.print(payload_length);
+    Serial.print(", Motor ID: ");
+    Serial.print(motor_id);
+    Serial.print(", Direction: ");
+    Serial.print(direction, HEX);
+    Serial.print(", Duty Cycle: ");
+    Serial.println(duty_cycle);
+
+    if (motor_id ==1 || motor_id ==2 ||motor_id ==4 ||motor_id ==8)  {
+        digitalWrite(dirPin_fr, LOW);
+        digitalWrite(dirPin_fl, LOW);
+        digitalWrite(dirPin_rr, HIGH);
+        digitalWrite(dirPin_rl, HIGH);
+        for (SpeedVal = 0; SpeedVal < 255; SpeedVal++){
+          analogWrite(pwmPin_fr,SpeedVal);
+          analogWrite(pwmPin_fl,SpeedVal);
+          analogWrite(pwmPin_rr,SpeedVal);
+          analogWrite(pwmPin_rl,SpeedVal);
+        }
+        delay(1000);
+        analogWrite(pwmPin_fr, 0);
+        analogWrite(pwmPin_fl, 0);
+        analogWrite(pwmPin_rr, 0);
+        analogWrite(pwmPin_rl, 0);
+    }
+  }
+  else{
+    analogWrite(pwmPin_fr, 0);
+    analogWrite(pwmPin_fl, 0);
+    analogWrite(pwmPin_rr, 0);
+    analogWrite(pwmPin_rl, 0);
+  }
+}
